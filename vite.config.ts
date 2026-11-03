@@ -5,7 +5,11 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 
 // `npm run build`         → 배포용 PWA (Vercel)
 // `npm run build:preview` → 미리보기용 단일 HTML (서비스워커 없음)
+// GitHub Pages는 /outfit-weather/ 아래에서 열리므로 BASE_PATH로 경로를 맞춘다 (Vercel은 기본값 '/')
+const base = process.env.BASE_PATH ?? '/';
+
 export default defineConfig(({ mode }) => ({
+  base: mode === 'preview' ? './' : base,
   plugins: [
     react(),
     mode === 'preview'
@@ -20,8 +24,9 @@ export default defineConfig(({ mode }) => ({
             theme_color: '#2d5f86',
             background_color: '#f3f5f6',
             display: 'standalone',
-            start_url: '/',
-            icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
+            start_url: '.',
+            scope: '.',
+            icons: [{ src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
           },
         }),
   ],
