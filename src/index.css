@@ -189,6 +189,8 @@ button { cursor: pointer; }
 .fix-box .full { grid-column: 1 / -1; }
 
 .error { color: var(--danger); font-size: 12.5px; margin: 0; }
+.card.has-error { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger); }
+.card { scroll-margin-top: calc(12px + env(safe-area-inset-top, 0px)); }
 
 /* 옷차림 */
 .seg-switch { display: inline-flex; background: var(--surface-2); border-radius: var(--r-chip); padding: 3px; }

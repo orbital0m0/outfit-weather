@@ -51,7 +51,7 @@ export function SegmentCard({ seg, hours, places, outfitTags, error, removable, 
   };
 
   return (
-    <section className="card" aria-label={`${seg.label} 구간`}>
+    <section id={`card-${seg.id}`} className={`card${error ? ' has-error' : ''}`} aria-label={`${seg.label} 구간`}>
       <div className="seg-head">
         <h3>{seg.label}</h3>
         <div className="times">

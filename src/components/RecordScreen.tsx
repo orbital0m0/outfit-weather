@@ -104,7 +104,13 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
     const r = validate(log);
     setCheck(r);
     if (!r.ok) {
-      setMsg({ text: '빠진 곳을 채워주세요.', tone: 'err' });
+      const missing = [
+        ...(r.outfit ? ['옷차림'] : []),
+        ...log.segments.filter((s) => r.segments[s.id]).map((s) => s.label),
+      ];
+      setMsg({ text: `아직 비어 있어요: ${missing.join(', ')}`, tone: 'err' });
+      const firstId = r.outfit ? 'card-outfit' : `card-${log.segments.find((s) => r.segments[s.id])?.id}`;
+      document.getElementById(firstId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     await persist({ ...log, status: 'logged' }, '저장했어요.');

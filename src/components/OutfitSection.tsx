@@ -63,7 +63,7 @@ export function OutfitSection({ mode, onModeChange, photo, memo, tags, error, on
   );
 
   return (
-    <section className="card" aria-label="오늘 옷차림">
+    <section id="card-outfit" className={`card${error ? ' has-error' : ''}`} aria-label="오늘 옷차림">
       <div className="row between">
         <h3>오늘 입은 옷</h3>
         <div className="seg-switch" role="group" aria-label="기본 기록 방식">
