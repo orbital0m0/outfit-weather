@@ -43,7 +43,12 @@ src/
     record.ts            기록 초안 생성, 검증
     photo.ts             사진 리사이즈 (긴 변 1080px)
     dongs.ts             동 이름 검색 (src/data/dongs.json)
+    match.ts             비슷한 날 찾기(거리 점수)와 조언 문구
+    draft.ts             아침 체크리스트 ↔ 저녁 기록 변환
+    guide.ts             기온별 일반 옷차림 가이드
   components/
+    HomeScreen.tsx       홈 (오늘 예보, 비슷한 날 카드)
+    OutfitChecklist.tsx  옷차림 체크리스트 (입음·바꿈·추가)
     RecordScreen.tsx     기록하기 화면
     OutfitSection.tsx    사진 / 메모 / 옷 태그
     SegmentCard.tsx      구간 카드 (체감, 외투 벗음, 이동수단, 보정)
@@ -58,7 +63,7 @@ src/
 
 - [x] 온보딩: 집·회사 동네 등록 (행정동 중심 좌표 내장, 동 이름 자동완성)
 - [x] 설정 화면 (동네, 출퇴근 경로, 구간 시간, 기록 방식)
-- [ ] 홈: 오늘 예보 + 비슷한 날 카드 + 옷차림 체크리스트
+- [x] 홈: 오늘 구간별 예보 + 비슷한 날 카드 + 옷차림 체크리스트 (기록이 없으면 일반 가이드)
 - [ ] 캘린더
 - [ ] 공휴일: 공공데이터포털 특일 정보 API
 - [ ] 저녁 알림 (웹 푸시)

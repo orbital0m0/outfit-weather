@@ -72,7 +72,9 @@ export interface SegmentWeather {
   temp: number;
   feelsLike: number;
   feelsMin: number;
+  feelsMax: number;
   wind: number;
+  rain: boolean; // 구간 중 강수가 있었는지
   corrected: boolean;
 }
 
@@ -88,7 +90,9 @@ export function segmentWeather(hours: HourlyWeather[] | undefined, seg: Segment)
     temp: Math.round(avg('temp')),
     feelsLike: Math.round(avg('feelsLike')),
     feelsMin: Math.round(Math.min(...slice.map((h) => h.feelsLike))),
+    feelsMax: Math.round(Math.max(...slice.map((h) => h.feelsLike))),
     wind: round1(avg('wind')),
+    rain: slice.some((h) => h.precip >= 0.1),
   };
   const c = seg.correction;
   if (c && (c.temp != null || c.feelsLike != null)) {
@@ -97,6 +101,7 @@ export function segmentWeather(hours: HourlyWeather[] | undefined, seg: Segment)
       temp: c.temp ?? base.temp,
       feelsLike: c.feelsLike ?? base.feelsLike,
       feelsMin: c.feelsLike ?? base.feelsMin,
+      feelsMax: c.feelsLike ?? base.feelsMax,
       corrected: true,
     };
   }

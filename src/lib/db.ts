@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { DailyLog, Place, Settings, WeekdaySegment } from '../types';
+import type { DailyLog, OutfitDraft, Place, Settings, WeekdaySegment } from '../types';
 import { WEEKDAY_PRESET } from './constants';
 
 // 기기 안 저장소(IndexedDB). 브라우저가 막으면(사생활 보호 모드, 미리보기 등)
@@ -9,10 +9,12 @@ class OutfitDB extends Dexie {
   logs!: Table<DailyLog, string>;
   settings!: Table<Settings & { id: 'me' }, string>;
   places!: Table<Place, string>;
+  drafts!: Table<OutfitDraft, string>;
   constructor() {
     super('outfit-weather');
     this.version(1).stores({ logs: 'date', settings: 'id' });
     this.version(2).stores({ logs: 'date', settings: 'id', places: 'key' });
+    this.version(3).stores({ logs: 'date', settings: 'id', places: 'key', drafts: 'date' });
   }
 }
 
@@ -25,6 +27,9 @@ interface Store {
   getPlaces(): Promise<Place[]>;
   putPlace(p: Place): Promise<void>;
   removePlace(key: string): Promise<void>;
+  getDraft(date: string): Promise<OutfitDraft | undefined>;
+  putDraft(d: OutfitDraft): Promise<void>;
+  removeDraft(date: string): Promise<void>;
   persistent: boolean;
 }
 
@@ -52,11 +57,15 @@ function memoryStore(): Store {
   const logs = new Map<string, DailyLog>();
   let settings = DEFAULT_SETTINGS;
   const places = new Map<string, Place>();
+  const drafts = new Map<string, OutfitDraft>();
   return {
     persistent: false,
     async getPlaces() { return [...places.values()].sort(byRecent); },
     async putPlace(p) { places.set(p.key, p); },
     async removePlace(k) { places.delete(k); },
+    async getDraft(d) { return drafts.get(d); },
+    async putDraft(d) { drafts.set(d.date, d); },
+    async removeDraft(d) { drafts.delete(d); },
     async getLog(d) { return logs.get(d); },
     async putLog(l) { logs.set(l.date, l); },
     async allLogs() { return [...logs.values()].sort((a, b) => b.date.localeCompare(a.date)); },
@@ -75,6 +84,9 @@ function dexieStore(db: OutfitDB): Store {
     getPlaces: async () => (await db.places.toArray()).sort(byRecent),
     putPlace: async (p) => { await db.places.put(p); },
     removePlace: async (k) => { await db.places.delete(k); },
+    getDraft: (d) => db.drafts.get(d),
+    putDraft: async (d) => { await db.drafts.put(d); },
+    removeDraft: async (d) => { await db.drafts.delete(d); },
     putSettings: async (s) => { await db.settings.put({ ...s, id: 'me' }); },
   };
 }

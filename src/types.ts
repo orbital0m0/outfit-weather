@@ -79,3 +79,18 @@ export interface Settings {
   commuteTransports: Transport[]; // 평소 출퇴근 경로 → 출근길·밤 구간 기본값
   weekdayTimes: Record<WeekdaySegment, { start: string; end: string }>; // 평일 구간 기본 시간
 }
+
+export interface OutfitDraftItem {
+  id: string;
+  label: string; // '베이지 트렌치'
+  category?: Category; // 메모에서 나온 항목은 없을 수 있음
+  state: 'worn' | 'skipped' | 'replaced' | 'added';
+  replacedBy?: string; // state가 replaced일 때 '가디건'
+}
+
+// 아침 체크리스트. 오늘 하루만 유지한다.
+export interface OutfitDraft {
+  date: string;
+  sourceLogId: string; // 선택한 카드(과거 기록)의 날짜
+  items: OutfitDraftItem[];
+}

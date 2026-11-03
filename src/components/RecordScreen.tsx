@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DailyLog, DayWeather, Place, Segment, Settings } from '../types';
 import { addDays, formatDate, toYMD } from '../lib/dates';
-import { GENERIC_OUTER, categoryOf } from '../lib/constants';
+import { DEFAULT_TAGS, GENERIC_OUTER, categoryOf } from '../lib/constants';
+import { pendingOuters, tagsFromDraft } from '../lib/draft';
 import { addOutingSegment, migrateSamplePlaces, newDraft, validate, withOuting, withWeekdayPreset, type ValidationResult } from '../lib/record';
 import { fetchDayWeather } from '../lib/weather';
 import type { getStore } from '../lib/db';
@@ -28,6 +29,7 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
   const [check, setCheck] = useState<ValidationResult | null>(null);
   const [msg, setMsg] = useState<{ text: string; tone?: 'ok' | 'err' }>({ text: '' });
   const inflight = useRef(new Set<string>());
+  const [pending, setPending] = useState<string[]>([]); // 아침에 체크 안 한 아우터
 
   // 날짜가 바뀌면 저장된 기록을 불러오거나 새 초안을 만든다.
   useEffect(() => {
@@ -46,7 +48,17 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
         setMsg({ text: '저장된 기록이에요. 고치고 다시 저장할 수 있어요.' });
         return;
       }
-      const draft = newDraft(date, places, settings);
+      let draft = newDraft(date, places, settings);
+      // 아침에 홈에서 체크한 옷차림이 있으면 미리 채운다
+      const morning = date === today ? await store.getDraft(date) : undefined;
+      if (!alive) return;
+      if (morning) {
+        draft = { ...draft, outfitTags: tagsFromDraft(morning), sourceLogId: morning.sourceLogId };
+        setPending(pendingOuters(morning).map((it) => it.label));
+        if (draft.outfitTags.length) setMsg({ text: '아침에 체크한 옷차림을 채워뒀어요.' });
+      } else {
+        setPending([]);
+      }
       setLog(draft);
       // 휴일은 자동으로 "집" 상태로 저장 (미래 날짜는 제외)
       if (draft.status === 'home' && date <= today) {
@@ -184,6 +196,46 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
 
           {sampleWeather && (
             <p className="notice">미리보기에서는 실제 날씨를 못 불러와서 예시 날씨로 보여줘요.</p>
+          )}
+
+          {pending.length > 0 && !log.savedAt && (
+            <section className="card status-card" aria-label="아우터 확인">
+              <h3>{pending.join(', ')}는 안 입었나요?</h3>
+              <p className="sub">대신 입은 아우터가 있으면 골라주세요.</p>
+              <div className="chips">
+                {pending.map((t) => (
+                  <button
+                    key={`worn-${t}`}
+                    type="button"
+                    className="chip"
+                    onClick={() => {
+                      update({ ...log, outfitTags: [...new Set([...log.outfitTags, t])] });
+                      setPending([]);
+                    }}
+                  >
+                    {t} 입었어요
+                  </button>
+                ))}
+                {DEFAULT_TAGS.outer
+                  .filter((t) => !pending.includes(t))
+                  .map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      className="chip"
+                      onClick={() => {
+                        update({ ...log, outfitTags: [...new Set([...log.outfitTags, t])] });
+                        setPending([]);
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                <button type="button" className="chip ghost" onClick={() => setPending([])}>
+                  안 입었어요
+                </button>
+              </div>
+            </section>
           )}
 
           <OutfitSection

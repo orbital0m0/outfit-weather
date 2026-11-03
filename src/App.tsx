@@ -4,13 +4,14 @@ import { DEFAULT_SETTINGS, getStore } from './lib/db';
 import { toYMD } from './lib/dates';
 import type { Dong } from './lib/dongs';
 import { RecordScreen } from './components/RecordScreen';
+import { HomeScreen } from './components/HomeScreen';
 import { LogList } from './components/LogList';
 import { Onboarding } from './components/Onboarding';
 import { SettingsScreen } from './components/SettingsScreen';
 import { placeFromDong } from './components/SetupParts';
 
 type Store = Awaited<ReturnType<typeof getStore>>;
-type Tab = 'record' | 'list' | 'settings';
+type Tab = 'home' | 'record' | 'list' | 'settings';
 
 const RECENT_LIMIT = 3;
 
@@ -18,7 +19,7 @@ export default function App() {
   const [store, setStore] = useState<Store | null>(null);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [places, setPlaces] = useState<Place[]>([]);
-  const [tab, setTab] = useState<Tab>('record');
+  const [tab, setTab] = useState<Tab>('home');
   const [date, setDate] = useState(toYMD(new Date()));
 
   useEffect(() => {
@@ -77,7 +78,7 @@ export default function App() {
           onDone={(ps, s) => {
             ps.forEach(upsertPlace);
             changeSettings(s);
-            setTab('record');
+            setTab('home');
           }}
         />
       </main>
@@ -89,8 +90,18 @@ export default function App() {
       <header className="topbar">
         <h1 className="brand">그날의 옷</h1>
         <nav className="tabs" aria-label="화면">
-          <button type="button" aria-pressed={tab === 'record'} onClick={() => setTab('record')}>
-            기록하기
+          <button type="button" aria-pressed={tab === 'home'} onClick={() => setTab('home')}>
+            홈
+          </button>
+          <button
+            type="button"
+            aria-pressed={tab === 'record'}
+            onClick={() => {
+              setDate(toYMD(new Date()));
+              setTab('record');
+            }}
+          >
+            기록
           </button>
           <button type="button" aria-pressed={tab === 'list'} onClick={() => setTab('list')}>
             목록
@@ -105,6 +116,17 @@ export default function App() {
         <p className="notice">이 화면에서는 기록이 임시로만 저장돼요. 새로고침하면 사라질 수 있어요.</p>
       )}
 
+      {tab === 'home' && (
+        <HomeScreen
+          store={store}
+          places={chipPlaces}
+          settings={settings}
+          onGoRecord={() => {
+            setDate(toYMD(new Date()));
+            setTab('record');
+          }}
+        />
+      )}
       {tab === 'record' && (
         <RecordScreen
           store={store}
