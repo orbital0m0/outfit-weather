@@ -169,12 +169,12 @@ button { cursor: pointer; }
 .comfort button[aria-pressed='true'] span { font-weight: 600; }
 
 /* 구간 카드 */
-.seg-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.seg-head { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; }
 .seg-head h3 { font-family: var(--font-display); font-weight: 400; font-size: 19px; }
 .times { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
 .times input {
   border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); padding: 4px 6px;
-  font-size: 13px; width: 92px;
+  font-size: 13px; width: 9.5em; min-width: 0;
 }
 .wx { display: flex; align-items: baseline; gap: 10px; font-variant-numeric: tabular-nums; }
 .wx .t { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; }
