@@ -42,18 +42,31 @@ src/
     db.ts                IndexedDB 저장소
     record.ts            기록 초안 생성, 검증
     photo.ts             사진 리사이즈 (긴 변 1080px)
+    dongs.ts             동 이름 검색 (src/data/dongs.json)
   components/
     RecordScreen.tsx     기록하기 화면
     OutfitSection.tsx    사진 / 메모 / 옷 태그
     SegmentCard.tsx      구간 카드 (체감, 외투 벗음, 이동수단, 보정)
     ComfortPicker.tsx    체감 5단계
     LogList.tsx          기록 목록
+    Onboarding.tsx       처음 설정 (집·회사 동네, 출퇴근 경로, 구간 시간)
+    SettingsScreen.tsx   설정
+    DongSearch.tsx       동 이름 자동완성
 ```
 
 ## 다음 작업
 
-- [ ] 온보딩: 집·회사 위치 등록 (기상청 격자·위경도 목록 내장, 동 이름 자동완성)
+- [x] 온보딩: 집·회사 동네 등록 (행정동 중심 좌표 내장, 동 이름 자동완성)
+- [x] 설정 화면 (동네, 출퇴근 경로, 구간 시간, 기록 방식)
 - [ ] 홈: 오늘 예보 + 비슷한 날 카드 + 옷차림 체크리스트
-- [ ] 캘린더, 설정 화면
+- [ ] 캘린더
 - [ ] 공휴일: 공공데이터포털 특일 정보 API
 - [ ] 저녁 알림 (웹 푸시)
+
+## 데이터 출처
+
+- 날씨: [Open-Meteo](https://open-meteo.com) (비상업적 무료 이용)
+- 동 위치(`src/data/dongs.json`): 행정동 경계의 중심점을 계산한 값입니다.
+  본 데이터는 통계청 통계지리정보서비스(SGIS, https://sgis.kostat.go.kr)에서
+  공공누리 제1유형으로 개방한 행정동 경계를 가공한 것이며(가공: vuski/admdongkor,
+  https://github.com/vuski/admdongkor), CC BY 4.0으로 배포됩니다. (2026-10-01 기준 3,559개 동)

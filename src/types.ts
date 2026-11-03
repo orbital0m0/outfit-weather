@@ -71,7 +71,11 @@ export interface DailyLog {
   savedAt: string;
 }
 
+export type WeekdaySegment = 'commute' | 'lunch' | 'day' | 'evening';
+
 export interface Settings {
+  onboarded: boolean; // 온보딩(집·회사 등록)을 마쳤는지
   recordMode: 'photo' | 'memo'; // 기본 기록 방식
   commuteTransports: Transport[]; // 평소 출퇴근 경로 → 출근길·밤 구간 기본값
+  weekdayTimes: Record<WeekdaySegment, { start: string; end: string }>; // 평일 구간 기본 시간
 }

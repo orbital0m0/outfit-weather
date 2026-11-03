@@ -1,4 +1,4 @@
-import type { Category, Comfort, DiscomfortAt, Place, SegmentType, Setting, Transport } from '../types';
+import type { Category, Comfort, DiscomfortAt, SegmentType, Setting, Transport } from '../types';
 
 export const COMFORT: { value: Comfort; label: string; tone: 'cold' | 'ok' | 'hot' }[] = [
   { value: -2, label: '많이 추움', tone: 'cold' },
@@ -44,13 +44,6 @@ export const DEFAULT_TAGS: Record<Category, string[]> = {
 export function categoryOf(tag: string): Category | undefined {
   return (Object.keys(DEFAULT_TAGS) as Category[]).find((c) => DEFAULT_TAGS[c].includes(tag));
 }
-
-// 미리보기용 예시 장소. 실제 앱에서는 온보딩에서 동 이름으로 등록한다.
-export const SAMPLE_PLACES: Place[] = [
-  { key: 'home', kind: 'home', label: '집', regionName: '마포구 서교동 (예시)', lat: 37.5552, lon: 126.9195 },
-  { key: 'work', kind: 'work', label: '회사', regionName: '중구 을지로동 (예시)', lat: 37.5663, lon: 126.9917 },
-  { key: 'p_seongsu', kind: 'saved', label: '성수동', regionName: '성동구 성수1가1동', lat: 37.5446, lon: 127.0557 },
-];
 
 export interface SegmentPreset {
   type: SegmentType;

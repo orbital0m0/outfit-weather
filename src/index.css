@@ -240,3 +240,49 @@ textarea {
 @media (prefers-reduced-motion: no-preference) {
   .chip, .comfort button, .big-btn { transition: background-color 120ms ease, border-color 120ms ease; }
 }
+
+/* 온보딩·설정 */
+.ob-intro { margin: 0; }
+.onboarding { gap: 14px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.steps li {
+  font-size: 12px; color: var(--muted); text-align: center; padding-top: 8px;
+  border-top: 3px solid var(--line);
+}
+.steps li.done { border-color: var(--accent); }
+.steps li[aria-current='step'] { border-color: var(--accent); color: var(--ink); font-weight: 600; }
+.ob-title { font-family: var(--font-display); font-weight: 400; font-size: 22px; text-wrap: balance; }
+.ob-actions { padding-top: 4px; }
+.ob-actions .big-btn { flex: 0 1 140px; }
+.big-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.fineprint { margin: 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+.dong-search { display: flex; flex-direction: column; gap: 6px; }
+.text-input {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2);
+  padding: 10px 12px; font-size: 15px;
+}
+.dong-picked {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  background: var(--accent-soft); border-radius: 10px; padding: 10px 12px;
+}
+.dong-picked strong { font-size: 16px; }
+.dong-picked span { font-size: 13px; color: var(--muted); }
+.dong-results {
+  list-style: none; margin: 0; padding: 4px; border: 1px solid var(--line); border-radius: 10px;
+  max-height: 260px; overflow-y: auto; background: var(--surface);
+}
+.dong-results li > .sub { display: block; padding: 10px; }
+.dong-results button {
+  width: 100%; border: 0; background: transparent; text-align: left; padding: 10px; border-radius: 8px;
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+}
+.dong-results button:hover, .dong-results button:focus-visible { background: var(--surface-2); }
+.dong-results button span { font-size: 12.5px; color: var(--muted); }
+.check-row { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.check-row input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+.times-list { display: flex; flex-direction: column; gap: 10px; }
+.times-row { display: flex; align-items: center; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; }
+.times-name { font-weight: 600; min-width: 3em; }
+.times-err { flex-basis: 100%; }

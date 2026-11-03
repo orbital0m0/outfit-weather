@@ -24,6 +24,29 @@ export function segmentFromPreset(p: SegmentPreset, places: Place[], settings?: 
   };
 }
 
+// 설정의 평일 구간 기본 시간을 반영한 프리셋
+export function weekdayPresets(settings: Settings): SegmentPreset[] {
+  return WEEKDAY_PRESET.map((p) => {
+    const t = settings.weekdayTimes[p.type as keyof Settings['weekdayTimes']];
+    return t ? { ...p, start: t.start, end: t.end } : p;
+  });
+}
+
+// 온보딩 전에 예시 동네로 저장한 기록은, 다시 열면 등록한 집·회사로 바꾸고 날씨를 새로 받는다
+export function migrateSamplePlaces(log: DailyLog, places: Place[]): DailyLog {
+  let changed = false;
+  const hourly = { ...log.hourly };
+  const segments = log.segments.map((s) => {
+    if (!s.place.regionName.includes('(예시)')) return s;
+    const real = places.find((p) => p.kind === s.place.kind) ?? places[0];
+    if (!real) return s;
+    changed = true;
+    delete hourly[s.place.key];
+    return { ...s, place: real };
+  });
+  return changed ? { ...log, segments, hourly } : log;
+}
+
 export const askTransport = (s: Segment) =>
   s.type === 'commute' || s.type === 'evening' || s.type === 'outing' || s.type === 'custom';
 
@@ -38,13 +61,13 @@ export function newDraft(date: string, places: Place[], settings: Settings): Dai
     outfitTags: [],
     hourly: {},
     weatherSource: 'sample',
-    segments: rest ? [] : WEEKDAY_PRESET.map((p) => segmentFromPreset(p, places, settings)),
+    segments: rest ? [] : weekdayPresets(settings).map((p) => segmentFromPreset(p, places, settings)),
     savedAt: '',
   };
 }
 
 export function withWeekdayPreset(log: DailyLog, places: Place[], settings: Settings): DailyLog {
-  return { ...log, status: 'empty', preset: 'weekday', segments: WEEKDAY_PRESET.map((p) => segmentFromPreset(p, places, settings)) };
+  return { ...log, status: 'empty', preset: 'weekday', segments: weekdayPresets(settings).map((p) => segmentFromPreset(p, places, settings)) };
 }
 
 export function withOuting(log: DailyLog, places: Place[]): DailyLog {

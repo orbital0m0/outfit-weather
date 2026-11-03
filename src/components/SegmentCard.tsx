@@ -4,6 +4,8 @@ import { DISCOMFORT, GENERIC_OUTER, TRANSPORT, categoryOf, isVehicle } from '../
 import { askTransport } from '../lib/record';
 import { segmentWeather } from '../lib/weather';
 import { ComfortPicker } from './ComfortPicker';
+import { DongSearch } from './DongSearch';
+import type { Dong } from '../lib/dongs';
 
 interface Props {
   seg: Segment;
@@ -14,11 +16,13 @@ interface Props {
   removable: boolean;
   commuteRoute: Transport[];
   onSaveRoute: (t: Transport[]) => void;
+  onAddPlace: (d: Dong) => Place;
   onChange: (s: Segment) => void;
   onRemove: () => void;
 }
 
-export function SegmentCard({ seg, hours, places, outfitTags, error, removable, commuteRoute, onSaveRoute, onChange, onRemove }: Props) {
+export function SegmentCard({ seg, hours, places, outfitTags, error, removable, commuteRoute, onSaveRoute, onAddPlace, onChange, onRemove }: Props) {
+  const [addingPlace, setAddingPlace] = useState(false);
   const [fixOpen, setFixOpen] = useState(!!seg.correction);
   const wx = segmentWeather(hours, seg);
   const outers = outfitTags.filter((t) => categoryOf(t) === 'outer');
@@ -74,7 +78,7 @@ export function SegmentCard({ seg, hours, places, outfitTags, error, removable, 
       </div>
 
       <div className="chips" role="group" aria-label="장소">
-        {places.map((p) => (
+        {(places.some((p) => p.key === seg.place.key) ? places : [...places, seg.place]).map((p) => (
           <button
             key={p.key}
             type="button"
@@ -85,7 +89,22 @@ export function SegmentCard({ seg, hours, places, outfitTags, error, removable, 
             {p.kind === 'saved' ? p.label : `${p.label} 근처`}
           </button>
         ))}
+        <button type="button" className="chip ghost" aria-expanded={addingPlace} onClick={() => setAddingPlace((v) => !v)}>
+          {addingPlace ? '닫기' : '+ 다른 곳'}
+        </button>
       </div>
+      {addingPlace && (
+        <DongSearch
+          id={`${seg.id}-place`}
+          label="어느 동네에 있었어요?"
+          placeholder="성수, 해운대 우동"
+          autoFocus
+          onSelect={(d) => {
+            set({ place: onAddPlace(d) });
+            setAddingPlace(false);
+          }}
+        />
+      )}
 
       <div className="wx">
         {wx ? (

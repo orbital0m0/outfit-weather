@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DailyLog, DayWeather, Place, Segment, Settings } from '../types';
 import { addDays, formatDate, toYMD } from '../lib/dates';
 import { GENERIC_OUTER, categoryOf } from '../lib/constants';
-import { addOutingSegment, newDraft, validate, withOuting, withWeekdayPreset, type ValidationResult } from '../lib/record';
+import { addOutingSegment, migrateSamplePlaces, newDraft, validate, withOuting, withWeekdayPreset, type ValidationResult } from '../lib/record';
 import { fetchDayWeather } from '../lib/weather';
 import type { getStore } from '../lib/db';
+import type { Dong } from '../lib/dongs';
 import { OutfitSection } from './OutfitSection';
 import { SegmentCard } from './SegmentCard';
 
@@ -17,9 +18,10 @@ interface Props {
   onSettings: (s: Settings) => void;
   date: string;
   onDate: (d: string) => void;
+  onAddPlace: (d: Dong) => Place;
 }
 
-export function RecordScreen({ store, places, settings, onSettings, date, onDate }: Props) {
+export function RecordScreen({ store, places, settings, onSettings, date, onDate, onAddPlace }: Props) {
   const today = toYMD(new Date());
   const [log, setLog] = useState<DailyLog | null>(null);
   const [weather, setWeather] = useState<Record<string, DayWeather>>({});
@@ -35,7 +37,12 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
     store.getLog(date).then(async (saved) => {
       if (!alive) return;
       if (saved) {
-        setLog(saved);
+        const migrated = migrateSamplePlaces(saved, places);
+        setLog(migrated);
+        if (migrated !== saved) {
+          setMsg({ text: '예시 동네로 저장된 기록이라 내 동네 날씨로 바꿨어요. 저장하면 반영돼요.' });
+          return;
+        }
         setMsg({ text: '저장된 기록이에요. 고치고 다시 저장할 수 있어요.' });
         return;
       }
@@ -54,11 +61,18 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
   }, [date, store, places, today]);
 
   // 구간에 쓰인 장소마다 그날 시간별 날씨를 한 번씩 조회
-  const placeKeys = useMemo(() => [...new Set(log?.segments.map((s) => s.place.key) ?? [])], [log?.segments]);
+  // 장소 키가 같아도(집) 동네를 바꾸면 날씨가 달라지므로 좌표까지 캐시 키에 넣는다
+  const wkey = (p: Place) => `${date}:${p.key}:${p.lat},${p.lon}`;
+  const usedPlaces = useMemo(() => {
+    const m = new Map<string, Place>();
+    log?.segments.forEach((s) => m.set(s.place.key, s.place));
+    return [...m.values()];
+  }, [log?.segments]);
   useEffect(() => {
     if (!log) return;
-    for (const key of placeKeys) {
-      const cacheKey = `${date}:${key}`;
+    for (const place of usedPlaces) {
+      const key = place.key;
+      const cacheKey = wkey(place);
       if (weather[cacheKey]) continue;
       const saved = log.hourly[key];
       if (saved?.length) {
@@ -67,16 +81,16 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
       }
       if (inflight.current.has(cacheKey)) continue;
       inflight.current.add(cacheKey);
-      const place = log.segments.find((s) => s.place.key === key)!.place;
       fetchDayWeather(place, date)
         .then((dw) => setWeather((w) => ({ ...w, [cacheKey]: dw })))
         .finally(() => inflight.current.delete(cacheKey));
     }
-  }, [placeKeys, date, log, weather]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usedPlaces, date, log, weather]);
 
   if (!log) return <p className="empty">불러오는 중…</p>;
 
-  const sampleWeather = placeKeys.some((k) => weather[`${date}:${k}`]?.source === 'sample');
+  const sampleWeather = usedPlaces.some((p) => weather[wkey(p)]?.source === 'sample');
   const update = (next: DailyLog) => {
     setLog(next);
     if (check) setCheck(validate(next));
@@ -88,7 +102,7 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
     const hourly: DailyLog['hourly'] = {};
     let source: DailyLog['weatherSource'] = 'open-meteo';
     for (const s of next.segments) {
-      const dw = weather[`${date}:${s.place.key}`];
+      const dw = weather[wkey(s.place)];
       if (dw) {
         hourly[s.place.key] = dw.hours;
         if (dw.source === 'sample') source = 'sample';
@@ -203,12 +217,13 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
             <SegmentCard
               key={s.id}
               seg={s}
-              hours={weather[`${date}:${s.place.key}`]?.hours}
+              hours={weather[wkey(s.place)]?.hours}
               places={places}
               outfitTags={log.outfitTags}
               error={check?.segments[s.id]}
               removable={log.segments.length > 1}
               commuteRoute={settings.commuteTransports}
+              onAddPlace={onAddPlace}
               onSaveRoute={(commuteTransports) => onSettings({ ...settings, commuteTransports })}
               onChange={updateSeg}
               onRemove={() => update({ ...log, segments: log.segments.filter((x) => x.id !== s.id) })}
