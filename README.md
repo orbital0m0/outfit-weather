@@ -36,7 +36,7 @@ npm run build:preview  # 단일 HTML 미리보기 빌드 → dist-preview/
 src/
   types.ts               명세의 데이터 모델
   lib/
-    constants.ts         체감 단계, 옷 태그, 구간 프리셋, 예시 장소
+    constants.ts         체감 단계, 옷 태그, 구간 프리셋
     dates.ts             날짜 유틸, 주말·공휴일 판정 (2026 예시 목록)
     weather.ts           Open-Meteo 조회, 샘플 날씨, 구간 날씨 계산
     db.ts                IndexedDB 저장소
