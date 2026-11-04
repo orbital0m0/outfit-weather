@@ -38,6 +38,57 @@
   color-scheme: light;
 }
 
+/* 다크 모드: 같은 차분한 톤을 어두운 청회색 위에 옮긴다.
+   앱이 직접 다크 모드를 지원해야 Android Chrome이 색을 억지로 뒤집지 않는다. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #12181d;
+    --surface: #1a2228;
+    --surface-2: #212b32;
+    --line: #2a353d;
+    --line-strong: #3b4852;
+    --ink: #e6ecf0;
+    --muted: #9ba9b4;
+    --faint: #6f7d88;
+    --sky: #7db6e6;
+    --sky-ink: #0f1c27;
+    --sky-soft: #1d3142;
+    --sky-line: #33536d;
+    --cold: #8dbdf0;
+    --cold-soft: #1c2e42;
+    --ok: #86c9a5;
+    --ok-soft: #1a3327;
+    --hot: #e9ad78;
+    --hot-soft: #3a2a1b;
+    --danger: #f08f8f;
+    --danger-soft: #3a1f1f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --bg: #12181d;
+  --surface: #1a2228;
+  --surface-2: #212b32;
+  --line: #2a353d;
+  --line-strong: #3b4852;
+  --ink: #e6ecf0;
+  --muted: #9ba9b4;
+  --faint: #6f7d88;
+  --sky: #7db6e6;
+  --sky-ink: #0f1c27;
+  --sky-soft: #1d3142;
+  --sky-line: #33536d;
+  --cold: #8dbdf0;
+  --cold-soft: #1c2e42;
+  --ok: #86c9a5;
+  --ok-soft: #1a3327;
+  --hot: #e9ad78;
+  --hot-soft: #3a2a1b;
+  --danger: #f08f8f;
+  --danger-soft: #3a1f1f;
+  color-scheme: dark;
+}
+
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
