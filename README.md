@@ -57,6 +57,7 @@ src/
     Onboarding.tsx       처음 설정 (집·회사 동네, 출퇴근 경로, 구간 시간)
     SettingsScreen.tsx   설정
     DongSearch.tsx       동 이름 자동완성
+    Icon.tsx             선 아이콘 (탭 바, 목록, 체크)
 ```
 
 ## 다음 작업

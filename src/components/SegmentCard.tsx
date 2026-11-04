@@ -111,7 +111,10 @@ export function SegmentCard({ seg, hours, places, outfitTags, error, removable, 
           <>
             <span className="t">{wx.temp}°</span>
             <span className="f">
-              체감 {wx.feelsLike}° · 바람 {wx.wind}m/s
+              체감 <b>{wx.feelsLike}°</b>
+            </span>
+            <span className="f">
+              바람 {wx.wind}m/s
             </span>
             {wx.corrected && <span className="tag fix">보정됨</span>}
           </>
@@ -188,7 +191,7 @@ export function SegmentCard({ seg, hours, places, outfitTags, error, removable, 
       )}
 
       {askWhere && (
-        <div className="cat">
+        <div className="cat ask-where">
           <span className="label">어디서 그랬어요? (선택)</span>
           <div className="chips">
             {DISCOMFORT.map((d) => (

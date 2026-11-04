@@ -3,6 +3,7 @@ import type { DailyLog } from '../types';
 import { COMFORT } from '../lib/constants';
 import { formatDate } from '../lib/dates';
 import { segmentWeather } from '../lib/weather';
+import { Icon } from './Icon';
 import type { getStore } from '../lib/db';
 
 type Store = Awaited<ReturnType<typeof getStore>>;
@@ -15,7 +16,13 @@ function Thumb({ blob }: { blob?: Blob }) {
     setUrl(u);
     return () => URL.revokeObjectURL(u);
   }, [blob]);
-  return url ? <img className="thumb" src={url} alt="" /> : <div className="thumb" aria-hidden="true" />;
+  return url ? (
+    <img className="thumb" src={url} alt="" />
+  ) : (
+    <div className="thumb ph">
+      <Icon name="hanger" />
+    </div>
+  );
 }
 
 export function LogList({ store, onOpen }: { store: Store; onOpen: (date: string) => void }) {
@@ -40,10 +47,15 @@ export function LogList({ store, onOpen }: { store: Store; onOpen: (date: string
           key={l.date}
           type="button"
           className="card log-item"
-          style={{ textAlign: 'left', flexDirection: 'row' }}
           onClick={() => onOpen(l.date)}
         >
-          {l.status === 'home' ? <div className="thumb" aria-hidden="true" /> : <Thumb blob={l.photo} />}
+          {l.status === 'home' ? (
+            <div className="thumb ph home">
+              <Icon name="home" />
+            </div>
+          ) : (
+            <Thumb blob={l.photo} />
+          )}
           <div className="body">
             <strong>{formatDate(l.date)}</strong>
             {l.status === 'home' ? (
@@ -51,7 +63,7 @@ export function LogList({ store, onOpen }: { store: Store; onOpen: (date: string
             ) : (
               <>
                 <span className="sub">
-                  {l.outfitTags.join(' · ') || l.outfitMemo || '사진만 기록'}
+                  {l.outfitTags.join(', ') || l.outfitMemo || '사진만 기록'}
                 </span>
                 <div className="chips">
                   {l.segments.map((s) => {

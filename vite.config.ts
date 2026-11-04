@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
             short_name: '그날의 옷',
             description: '그날 날씨와 옷차림, 체감을 기록하고 비슷한 날에 다시 꺼내 보는 앱',
             lang: 'ko',
-            theme_color: '#2d5f86',
+            theme_color: '#f3f5f7',
             background_color: '#f3f5f6',
             display: 'standalone',
             start_url: '.',

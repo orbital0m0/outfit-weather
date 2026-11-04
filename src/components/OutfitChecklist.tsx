@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { OutfitDraft, OutfitDraftItem } from '../types';
 import { CATEGORY_LABEL, DEFAULT_TAGS, categoryOf } from '../lib/constants';
 import { uid } from '../lib/record';
+import { Icon } from './Icon';
 
 interface Props {
   draft: OutfitDraft;
@@ -51,7 +52,7 @@ export function OutfitChecklist({ draft, onChange }: Props) {
               <div className="ck-main">
                 <button type="button" className="ck-toggle" aria-pressed={on} onClick={() => toggle(it)}>
                   <span className="ck-box" aria-hidden="true">
-                    {on ? '✓' : ''}
+                    {on && <Icon name="check" />}
                   </span>
                   <span className="ck-label">
                     {it.state === 'replaced' ? (

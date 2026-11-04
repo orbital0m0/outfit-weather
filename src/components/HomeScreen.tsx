@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { DailyLog, DayWeather, OutfitDraft, Place, Settings } from '../types';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import type { DailyLog, DayWeather, OutfitDraft, Place, Segment, Settings } from '../types';
 import { OUTING_PRESET } from '../lib/constants';
 import { formatDate, isRestDay, toYMD } from '../lib/dates';
 import { draftFromLog } from '../lib/draft';
@@ -28,6 +28,43 @@ function Thumb({ blob }: { blob?: Blob }) {
     return () => URL.revokeObjectURL(u);
   }, [blob]);
   return url ? <img className="thumb" src={url} alt="그날 옷차림 사진" /> : null;
+}
+
+// 하루 온도선: 구간별 체감온도를 점으로 찍고 이어서, 하루 중 언제 춥고 따뜻한지 한눈에 보여준다
+function DayLine({ segs, todaySegs }: { segs: Segment[]; todaySegs: TodaySegment[] }) {
+  const values = segs.map((s) => todaySegs.find((t) => t.seg.id === s.id)?.wx);
+  const feels = values.filter((v): v is NonNullable<typeof v> => !!v).map((v) => v.feelsLike);
+  const lo = Math.min(...feels);
+  const hi = Math.max(...feels);
+  const y = (f: number) => 8 + (hi === lo ? 0.5 : 1 - (f - lo) / (hi - lo)) * 32; // 0~48 중 8~40
+  const n = segs.length;
+  const pts = values
+    .map((v, i) => (v ? `${((i + 0.5) / n) * 100},${y(v.feelsLike)}` : null))
+    .filter(Boolean)
+    .join(' ');
+  return (
+    <div className="strip" style={{ '--n': n } as CSSProperties}>
+      {feels.length === n && n > 1 && (
+        <svg className="strip-line" viewBox="0 0 100 48" preserveAspectRatio="none" aria-hidden="true">
+          <polyline points={pts} />
+        </svg>
+      )}
+      {segs.map((s, i) => {
+        const wx = values[i];
+        return (
+          <div className="strip-col" key={s.id}>
+            <div className="strip-plot">{wx && <span className="strip-dot" style={{ top: y(wx.feelsLike) }} />}</div>
+            <span className="strip-feels">{wx ? `${wx.feelsLike}°` : '…'}</span>
+            <span className="strip-temp">{wx ? `기온 ${wx.temp}°` : ''}</span>
+            <span className="strip-name">{s.label}</span>
+            <span className="strip-time">{s.start}</span>
+            {s.setting === 'indoor' && <span className="strip-tag">실내</span>}
+            {wx?.rain && <span className="strip-tag rain">비</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export function HomeScreen({ store, places, settings, onGoRecord }: Props) {
@@ -89,38 +126,16 @@ export function HomeScreen({ store, places, settings, onGoRecord }: Props) {
     <>
       <div className="home-head">
         <h2>{formatDate(today)}</h2>
-        <span className="kind">{rest ? '쉬는 날 · 외출한다면' : '평일'}</span>
+        <span className="kind">{rest ? '쉬는 날, 외출한다면' : '평일'}</span>
       </div>
 
-      <section className="card" aria-label="오늘 예보">
+      <section className="card day-card" aria-label="오늘 구간별 날씨">
         <div className="row between">
-          <h3>오늘 구간별 날씨</h3>
+          <h3>오늘 바깥 날씨</h3>
           {sample && <span className="badge">예시 날씨</span>}
         </div>
-        <ul className="fc-list">
-          {segs.map((s) => {
-            const wx = todaySegs.find((t) => t.seg.id === s.id)?.wx;
-            return (
-              <li key={s.id} className="fc-row">
-                <span className="fc-name">{s.label}</span>
-                <span className="fc-time">
-                  {s.start}–{s.end}
-                  {s.setting === 'indoor' ? ' · 실내' : ''}
-                </span>
-                <span className="fc-temp">
-                  {wx ? (
-                    <>
-                      <strong>{wx.temp}°</strong> 체감 {wx.feelsLike}°{wx.rain ? ' · 비' : ''}
-                    </>
-                  ) : (
-                    '…'
-                  )}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-        {rainy && <p className="notice">오늘 비 소식이 있어요. 우산을 챙기세요.</p>}
+        <DayLine segs={segs} todaySegs={todaySegs} />
+        <p className="sub">큰 숫자는 체감온도예요.{rainy ? ' 오늘 비 소식이 있어요. 우산을 챙기세요.' : ''}</p>
       </section>
 
       {draft && chosen ? (
@@ -153,22 +168,29 @@ export function HomeScreen({ store, places, settings, onGoRecord }: Props) {
                     <strong>{formatDate(m.log.date)}</strong>
                     {delta && <span className="sub">{delta}</span>}
                     <span className="match-outfit">
-                      {m.log.outfitTags.join(' · ') || m.log.outfitMemo || '사진만 기록'}
+                      {m.log.outfitTags.join(', ') || m.log.outfitMemo || '사진만 기록'}
                     </span>
                   </div>
                 </div>
-                <div className="chips">
+                <ul className="match-rows">
                   {m.matches.map((x) => {
                     const c = comfortInfo(x.past.comfort);
+                    const extras = [
+                      x.past.removedTags.length ? '외투 벗음' : '',
+                      x.past.discomfortAt === 'inside' ? '차 안에서' : x.past.discomfortAt === 'both' ? '밖과 차 안 모두' : '',
+                    ].filter(Boolean);
                     return (
-                      <span key={x.past.id} className={`badge ${c?.tone ?? ''}`}>
-                        {x.past.label} 체감 {x.pastWx.feelsLike}° {c?.label}
-                        {x.past.removedTags.length ? ' · 외투 벗음' : ''}
-                        {x.past.discomfortAt === 'inside' ? ' · 차 안' : ''}
-                      </span>
+                      <li key={x.past.id} className="match-row">
+                        <span className="mr-name">{x.past.label}</span>
+                        <span className="mr-feels">체감 {x.pastWx.feelsLike}°</span>
+                        <span className="mr-right">
+                          {extras.length > 0 && <span className="mr-extra">{extras.join(', ')}</span>}
+                          <span className={`badge ${c?.tone ?? ''}`}>{c?.label}</span>
+                        </span>
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
                 <p className="advice">{m.advice}</p>
                 <button type="button" className="big-btn primary" onClick={() => choose(m)}>
                   이 옷차림으로 준비하기

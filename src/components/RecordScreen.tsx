@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Icon } from './Icon';
 import type { DailyLog, DayWeather, Place, Segment, Settings } from '../types';
 import { addDays, formatDate, toYMD } from '../lib/dates';
 import { DEFAULT_TAGS, GENERIC_OUTER, categoryOf } from '../lib/constants';
@@ -150,23 +152,21 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
   return (
     <>
       <div className="date-nav">
-        <button type="button" className="icon-btn" aria-label="전날" onClick={() => onDate(addDays(date, -1))}>
-          ‹
-        </button>
-        <div style={{ textAlign: 'center' }}>
+        <div className="date-text">
           <h2>{formatDate(date)}</h2>
-          <span className="kind">{rest ? '쉬는 날' : '평일'}{date === today ? ' · 오늘' : ''}</span>
+          <span className="kind">
+            {rest ? '쉬는 날' : '평일'}
+            {date === today && <span className="today-tag">오늘</span>}
+          </span>
         </div>
-        <button
-          type="button"
-          className="icon-btn"
-          aria-label="다음날"
-          disabled={date >= today}
-          style={{ opacity: date >= today ? 0.35 : 1 }}
-          onClick={() => onDate(addDays(date, 1))}
-        >
-          ›
-        </button>
+        <div className="date-arrows">
+          <button type="button" className="icon-btn" aria-label="전날" onClick={() => onDate(addDays(date, -1))}>
+            <Icon name="left" />
+          </button>
+          <button type="button" className="icon-btn" aria-label="다음날" disabled={date >= today} onClick={() => onDate(addDays(date, 1))}>
+            <Icon name="right" />
+          </button>
+        </div>
       </div>
 
       {isHome ? (
@@ -299,18 +299,20 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
         </>
       )}
 
-      {!isHome && (
+      {!isHome &&
+        createPortal(
         <div className="savebar">
           <div className="inner">
-            <span className={`msg ${msg.tone ?? ''}`} role="status">
+            <span key={msg.text} className={`msg ${msg.tone ?? ''}`} role="status">
               {msg.text}
             </span>
             <button type="button" className="save-btn" onClick={save}>
               저장
             </button>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
       {isHome && msg.text && (
         <p className={`notice`} role="status">
           {msg.text}

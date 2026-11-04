@@ -9,11 +9,19 @@ import { LogList } from './components/LogList';
 import { Onboarding } from './components/Onboarding';
 import { SettingsScreen } from './components/SettingsScreen';
 import { placeFromDong } from './components/SetupParts';
+import { Icon, type IconName } from './components/Icon';
 
 type Store = Awaited<ReturnType<typeof getStore>>;
 type Tab = 'home' | 'record' | 'list' | 'settings';
 
 const RECENT_LIMIT = 3;
+
+const TABS: { id: Tab; label: string; icon: IconName }[] = [
+  { id: 'home', label: '오늘', icon: 'home' },
+  { id: 'record', label: '기록', icon: 'pen' },
+  { id: 'list', label: '목록', icon: 'list' },
+  { id: 'settings', label: '설정', icon: 'sliders' },
+];
 
 export default function App() {
   const [store, setStore] = useState<Store | null>(null);
@@ -21,6 +29,7 @@ export default function App() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [tab, setTab] = useState<Tab>('home');
   const [date, setDate] = useState(toYMD(new Date()));
+  const [dir, setDir] = useState<'left' | 'right' | 'none'>('none');
 
   useEffect(() => {
     getStore().then(async (s) => {
@@ -58,7 +67,7 @@ export default function App() {
 
   if (!store) {
     return (
-      <main className="app">
+      <main className="app no-nav">
         <p className="empty">불러오는 중…</p>
       </main>
     );
@@ -66,10 +75,11 @@ export default function App() {
 
   if (!settings.onboarded || !places.some((p) => p.kind === 'home')) {
     return (
-      <main className="app">
+      <main className="app no-nav">
         <header className="topbar">
-          <h1 className="brand">그날의 옷</h1>
+          <span className="brand">그날의 옷</span>
         </header>
+        <h1 className="page-title">처음 설정</h1>
         <p className="sub ob-intro">
           그날 입은 옷과 더웠는지 추웠는지를 남겨두면, 비슷한 날씨가 왔을 때 다시 꺼내 볼 수 있어요. 먼저 동네부터 알려주세요.
         </p>
@@ -85,80 +95,85 @@ export default function App() {
     );
   }
 
+  const go = (t: Tab, opts?: { today?: boolean }) => {
+    if (opts?.today) setDate(toYMD(new Date()));
+    if (t === tab) return;
+    setDir(TABS.findIndex((x) => x.id === t) > TABS.findIndex((x) => x.id === tab) ? 'right' : 'left');
+    setTab(t);
+    window.scrollTo({ top: 0 });
+  };
+
   return (
     <main className="app">
       <header className="topbar">
-        <h1 className="brand">그날의 옷</h1>
-        <nav className="tabs" aria-label="화면">
-          <button type="button" aria-pressed={tab === 'home'} onClick={() => setTab('home')}>
-            홈
-          </button>
-          <button
-            type="button"
-            aria-pressed={tab === 'record'}
-            onClick={() => {
-              setDate(toYMD(new Date()));
-              setTab('record');
-            }}
-          >
-            기록
-          </button>
-          <button type="button" aria-pressed={tab === 'list'} onClick={() => setTab('list')}>
-            목록
-          </button>
-          <button type="button" aria-pressed={tab === 'settings'} onClick={() => setTab('settings')}>
-            설정
-          </button>
-        </nav>
+        <span className="brand">그날의 옷</span>
       </header>
 
       {!store.persistent && (
         <p className="notice">이 화면에서는 기록이 임시로만 저장돼요. 새로고침하면 사라질 수 있어요.</p>
       )}
 
-      {tab === 'home' && (
-        <HomeScreen
-          store={store}
-          places={chipPlaces}
-          settings={settings}
-          onGoRecord={() => {
-            setDate(toYMD(new Date()));
-            setTab('record');
-          }}
-        />
-      )}
-      {tab === 'record' && (
-        <RecordScreen
-          store={store}
-          places={chipPlaces}
-          settings={settings}
-          onSettings={changeSettings}
-          date={date}
-          onDate={setDate}
-          onAddPlace={addSavedPlace}
-        />
-      )}
-      {tab === 'list' && (
-        <LogList
-          store={store}
-          onOpen={(d) => {
-            setDate(d);
-            setTab('record');
-          }}
-        />
-      )}
-      {tab === 'settings' && (
-        <SettingsScreen
-          places={places}
-          settings={settings}
-          onPlace={upsertPlace}
-          onRemoveWork={() => {
-            setPlaces((prev) => prev.filter((p) => p.kind !== 'work'));
-            store.removePlace('work');
-          }}
-          onSettings={changeSettings}
-        />
-      )}
+      <div className="page" key={tab} data-dir={dir}>
+        {tab === 'home' && (
+          <HomeScreen store={store} places={chipPlaces} settings={settings} onGoRecord={() => go('record', { today: true })} />
+        )}
+        {tab === 'record' && (
+          <RecordScreen
+            store={store}
+            places={chipPlaces}
+            settings={settings}
+            onSettings={changeSettings}
+            date={date}
+            onDate={setDate}
+            onAddPlace={addSavedPlace}
+          />
+        )}
+        {tab === 'list' && (
+          <>
+            <h1 className="page-title">기록 목록</h1>
+            <LogList
+              store={store}
+              onOpen={(d) => {
+                setDate(d);
+                go('record');
+              }}
+            />
+          </>
+        )}
+        {tab === 'settings' && (
+          <>
+            <h1 className="page-title">설정</h1>
+            <SettingsScreen
+              places={places}
+              settings={settings}
+              onPlace={upsertPlace}
+              onRemoveWork={() => {
+                setPlaces((prev) => prev.filter((p) => p.kind !== 'work'));
+                store.removePlace('work');
+              }}
+              onSettings={changeSettings}
+            />
+          </>
+        )}
+      </div>
+
+      <nav className="tabbar" aria-label="화면">
+        <div className="inner">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              aria-current={tab === t.id ? 'page' : undefined}
+              onClick={() => go(t.id, { today: t.id === 'record' })}
+            >
+              <span className="ico">
+                <Icon name={t.icon} />
+              </span>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </nav>
     </main>
   );
 }
