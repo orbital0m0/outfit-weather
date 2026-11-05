@@ -85,22 +85,23 @@ export interface ValidationResult {
   segments: Record<string, string>;
 }
 
+export const hasOutfit = (log: DailyLog) => !!log.photo || !!log.outfitMemo?.trim() || log.outfitTags.length > 0;
+export const doneSegments = (log: DailyLog) => log.segments.filter((s) => s.comfort != null);
+export const leftSegments = (log: DailyLog) => log.segments.filter((s) => s.comfort == null);
+
+// 채운 만큼 저장한다. 아무것도 입력하지 않았거나 시간이 거꾸로일 때만 막는다.
 export function validate(log: DailyLog): ValidationResult {
   const r: ValidationResult = { ok: true, segments: {} };
   if (log.status === 'home') return r;
-  if (!log.photo && !log.outfitMemo?.trim() && log.outfitTags.length === 0) {
-    r.ok = false;
-    r.outfit = '사진, 옷차림 메모, 옷 태그 중 하나는 남겨주세요.';
-  }
-  if (log.segments.length === 0) r.ok = false;
   for (const s of log.segments) {
-    if (s.comfort == null) {
-      r.ok = false;
-      r.segments[s.id] = '어땠는지 하나 골라주세요.';
-    } else if (s.start >= s.end) {
+    if (s.start >= s.end) {
       r.ok = false;
       r.segments[s.id] = '끝나는 시간이 시작보다 늦어야 해요.';
     }
+  }
+  if (!hasOutfit(log) && doneSegments(log).length === 0) {
+    r.ok = false;
+    r.outfit = '오늘 입은 옷이나 구간 체감 중 하나만 남겨도 저장돼요.';
   }
   return r;
 }

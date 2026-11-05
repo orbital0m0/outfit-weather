@@ -218,6 +218,13 @@ button { cursor: pointer; }
 /* 구간 카드 */
 .seg-head { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; }
 .seg-head h3 { font-size: 19px; }
+.seg-title { display: flex; align-items: center; gap: 8px; }
+.seg-done {
+  display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; color: var(--ok);
+  background: var(--ok-soft); border-radius: var(--pill); padding: 2px 8px 2px 6px;
+}
+.seg-done svg { width: 12px; height: 12px; }
+.badge.empty { background: transparent; border-style: dashed; color: var(--faint); }
 .times { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; color: var(--faint); }
 .times input {
   border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2); padding: 5px 7px;
@@ -394,7 +401,7 @@ textarea {
   .page[data-dir='left'] { animation: page-in-l 300ms var(--ease) backwards; }
   .page[data-dir='none'] { animation: fade-in 260ms var(--ease) backwards; }
 
-  .fix-box, .dong-results, .ck-replace, .ask-where, .advice, .status-card { animation: drop-in 200ms var(--ease) backwards; }
+  .fix-box, .dong-results, .ck-replace, .ask-where, .advice, .status-card, .seg-done { animation: drop-in 200ms var(--ease) backwards; }
   .savebar .msg { animation: fade-in 220ms var(--ease) backwards; }
   .ck-item.on .ck-box { animation: check-pop 260ms var(--ease); }
 

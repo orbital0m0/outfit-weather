@@ -5,7 +5,7 @@ import type { DailyLog, DayWeather, Place, Segment, Settings } from '../types';
 import { addDays, formatDate, toYMD } from '../lib/dates';
 import { DEFAULT_TAGS, GENERIC_OUTER, categoryOf } from '../lib/constants';
 import { pendingOuters, tagsFromDraft } from '../lib/draft';
-import { addOutingSegment, migrateSamplePlaces, newDraft, validate, withOuting, withWeekdayPreset, type ValidationResult } from '../lib/record';
+import { addOutingSegment, hasOutfit, leftSegments, migrateSamplePlaces, newDraft, validate, withOuting, withWeekdayPreset, type ValidationResult } from '../lib/record';
 import { fetchDayWeather } from '../lib/weather';
 import type { getStore } from '../lib/db';
 import type { Dong } from '../lib/dongs';
@@ -47,7 +47,10 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
           setMsg({ text: '예시 동네로 저장된 기록이라 내 동네 날씨로 바꿨어요. 저장하면 반영돼요.' });
           return;
         }
-        setMsg({ text: '저장된 기록이에요. 고치고 다시 저장할 수 있어요.' });
+        const left = leftSegments(migrated).map((s) => s.label);
+        setMsg({
+          text: left.length && migrated.status === 'logged' ? `이어서 적을 수 있어요. 남은 구간: ${left.join(', ')}` : '저장된 기록이에요. 고치고 다시 저장할 수 있어요.',
+        });
         return;
       }
       let draft = newDraft(date, places, settings);
@@ -89,7 +92,8 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
       const cacheKey = wkey(place);
       if (weather[cacheKey]) continue;
       const saved = log.hourly[key];
-      if (saved?.length) {
+      const savedAfterDay = !!log.savedAt && toYMD(new Date(log.savedAt)) > log.date;
+      if (saved?.length && savedAfterDay) {
         setWeather((w) => ({ ...w, [cacheKey]: { hours: saved, source: log.weatherSource } }));
         continue;
       }
@@ -132,16 +136,21 @@ export function RecordScreen({ store, places, settings, onSettings, date, onDate
     const r = validate(log);
     setCheck(r);
     if (!r.ok) {
-      const missing = [
-        ...(r.outfit ? ['옷차림'] : []),
-        ...log.segments.filter((s) => r.segments[s.id]).map((s) => s.label),
-      ];
-      setMsg({ text: `아직 비어 있어요: ${missing.join(', ')}`, tone: 'err' });
-      const firstId = r.outfit ? 'card-outfit' : `card-${log.segments.find((s) => r.segments[s.id])?.id}`;
+      const badTime = log.segments.find((s) => r.segments[s.id]);
+      setMsg({
+        text: badTime ? `${badTime.label} 시간을 확인해 주세요.` : '아직 입력한 게 없어요.',
+        tone: 'err',
+      });
+      const firstId = badTime ? `card-${badTime.id}` : 'card-outfit';
       document.getElementById(firstId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
-    await persist({ ...log, status: 'logged' }, '저장했어요.');
+    const left = leftSegments(log).map((s) => s.label);
+    const parts = [!hasOutfit(log) ? '옷차림' : '', ...left].filter(Boolean);
+    await persist(
+      { ...log, status: 'logged' },
+      parts.length ? `저장했어요. 남은 것: ${parts.join(', ')}` : '오늘 기록을 다 채웠어요.',
+    );
   };
 
   const markHome = () => persist({ ...log, status: 'home', segments: [] }, '집에 있었던 날로 저장했어요.');

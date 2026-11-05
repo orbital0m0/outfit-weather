@@ -41,7 +41,7 @@ export interface DayMatch {
 const daysBetween = (a: string, b: string) => Math.round((fromYMD(a).getTime() - fromYMD(b).getTime()) / 864e5);
 
 export function findSimilarDays(today: string, todaySegs: TodaySegment[], logs: DailyLog[], limit = 3): DayMatch[] {
-  const past = logs.filter((l) => l.status === 'logged' && l.date < today && l.segments.length);
+  const past = logs.filter((l) => l.status === 'logged' && l.date < today && l.segments.some((s) => s.comfort != null));
   // 기록이 적은 초기에는 범위를 넓힌다
   const maxFeelsGap = past.length < 5 ? 5 : 3;
   const out: DayMatch[] = [];
@@ -49,7 +49,8 @@ export function findSimilarDays(today: string, todaySegs: TodaySegment[], logs: 
   for (const log of past) {
     const matches: SegmentMatch[] = [];
     for (const t of todaySegs) {
-      const p = log.segments.find((s) => groupOf(s.type) === groupOf(t.seg.type));
+      // 체감을 적은 구간만 비교한다 (일부만 기록한 날도 쓸 수 있게)
+      const p = log.segments.find((s) => groupOf(s.type) === groupOf(t.seg.type) && s.comfort != null);
       if (!p) continue;
       const pw = segmentWeather(log.hourly[p.place.key] as HourlyWeather[] | undefined, p);
       if (!pw) continue;

@@ -4,6 +4,7 @@ import { DISCOMFORT, GENERIC_OUTER, TRANSPORT, categoryOf, isVehicle } from '../
 import { askTransport } from '../lib/record';
 import { segmentWeather } from '../lib/weather';
 import { ComfortPicker } from './ComfortPicker';
+import { Icon } from './Icon';
 import { DongSearch } from './DongSearch';
 import type { Dong } from '../lib/dongs';
 
@@ -57,7 +58,15 @@ export function SegmentCard({ seg, hours, places, outfitTags, error, removable, 
   return (
     <section id={`card-${seg.id}`} className={`card${error ? ' has-error' : ''}`} aria-label={`${seg.label} 구간`}>
       <div className="seg-head">
-        <h3>{seg.label}</h3>
+        <div className="seg-title">
+          <h3>{seg.label}</h3>
+          {seg.comfort != null && (
+            <span className="seg-done">
+              <Icon name="check" />
+              적음
+            </span>
+          )}
+        </div>
         <div className="times">
           <input
             id={`${seg.id}-start`}

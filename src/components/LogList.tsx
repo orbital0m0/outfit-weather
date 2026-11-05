@@ -70,8 +70,8 @@ export function LogList({ store, onOpen }: { store: Store; onOpen: (date: string
                     const c = COMFORT.find((x) => x.value === s.comfort);
                     const wx = segmentWeather(l.hourly[s.place.key], s);
                     return (
-                      <span key={s.id} className={`badge ${c?.tone ?? ''}`}>
-                        {s.label} {wx ? `${wx.feelsLike}°` : ''} {c?.label ?? ''}
+                      <span key={s.id} className={`badge ${c?.tone ?? 'empty'}`}>
+                        {s.label} {c ? `${wx ? `${wx.feelsLike}° ` : ''}${c.label}` : '안 적음'}
                       </span>
                     );
                   })}
